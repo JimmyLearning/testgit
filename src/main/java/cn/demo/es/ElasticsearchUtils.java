@@ -1,3 +1,5 @@
+package cn.demo.es;
+
 import com.alibaba.fastjson.JSON;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
