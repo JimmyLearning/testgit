@@ -1,0 +1,9 @@
+Hive中orderby和sortby区别
+
+1.使用orderby全局排序
+2.使用distribute和sort进行分组排序
+3.distribute by + sort by 通过当前distribute by 设定字段为key,数据会被hash到不同reduce机器上
+4.然后同sort by 会对同一个reduce机器上的数据进行局部排序
+5.orderby 是全局有序 distribute sort by ：局部有序，全局无序
+
+
