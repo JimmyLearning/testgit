@@ -1,0 +1,46 @@
+https://www.elastic.co/guide/en/elasticsearch/reference/current/tune-for-search-speed.html
+
+Search rounded dates 搜索舍入日期
+Queries on date fields that use now are typically not cacheable since the range that is being matched changes all the time. However switching to a rounded date is often acceptable in terms of user experience, and has the benefit of making better use of the query cache.
+在date字段上查询使用now是不能被缓存的，因为匹配的范围一直在变化。但是就用户体验而言，切换到rounded date通常是可以接受的。并且具有更好地利用查询缓存的好处。
+
+比如使用下面：
+	PUT index/_doc/1
+	{
+	  "my_date": "2016-05-11T16:30:55.328Z"
+	}
+
+	GET index/_search
+	{
+	  "query": {
+		"constant_score": {
+		  "filter": {
+			"range": {
+			  "my_date": {
+				"gte": "now-1h",
+				"lte": "now"
+			  }
+			}
+		  }
+		}
+	  }
+	}
+优化为：
+	GET index/_search
+	{
+	  "query": {
+		"constant_score": {
+		  "filter": {
+			"range": {
+			  "my_date": {
+				"gte": "now-1h/m",
+				"lte": "now/m"
+			  }
+			}
+		  }
+		}
+	  }
+	}
+这样16:30:55就会按分钟优化为16:30:00-16:30:59
+
+注意，bool查询中有多个时间range时，上面date优化可能被bool抵消。

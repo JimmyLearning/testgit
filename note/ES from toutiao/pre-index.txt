@@ -1,0 +1,65 @@
+https://www.elastic.co/guide/en/elasticsearch/reference/6.3/tune-for-search-speed.html
+
+Pre-index data 预索引
+You should leverage patterns in your queries to optimize the way data is indexed. For instance, if all your documents have a price field and most queries run range aggregations on a fixed list of ranges, you could make this aggregation faster by pre-indexing the ranges into the index and using a terms aggregations.
+
+你应该在你的查询中利用模板来优化索引数据。例如，如果所有的doc都有price字段，并且大多数查询在固定的范围上使用了range聚合，你就能使用预索引范围来使得聚合变得更快。
+
+比如，doc像这样：
+	PUT index/_doc/1
+	{
+	  "designation": "spoon",
+	  "price": 13
+	}
+搜索请求像这样：
+	GET index/_search
+	{
+	  "aggs": {
+		"price_ranges": {
+		  "range": {
+			"field": "price",
+			"ranges": [
+			  { "to": 10 },
+			  { "from": 10, "to": 100 },
+			  { "from": 100 }
+			]
+		  }
+		}
+	  }
+	}
+
+Then documents could be enriched by a price_range field at index time, which should be mapped as a keyword:
+然后docs可以用price_range在索引的时候丰富字段，将其映射为keyword类型：
+	PUT index
+	{
+	  "mappings": {
+		"properties": {
+		  "price_range": {
+			"type": "keyword"
+		  }
+		}
+	  }
+	}
+
+	PUT index/_doc/1
+	{
+	  "designation": "spoon",
+	  "price": 13,
+	  "price_range": "10-100"
+	}
+	
+And then search requests could aggregate this new field rather than running a range aggregation on the price field.	
+然后在新字段上使用terms聚合而不是像之前range聚合：
+	GET index/_search
+	{
+	  "aggs": {
+		"price_ranges": {
+		  "terms": {
+			"field": "price_range"
+		  }
+		}
+	  }
+	}
+	
+	
+	
